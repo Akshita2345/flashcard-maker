@@ -10,13 +10,25 @@ const ejs = require('ejs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
+const sessionSecret = process.env.SESSION_SECRET || (isProduction ? null : 'flash-secret');
+
+if (!sessionSecret) {
+  throw new Error('SESSION_SECRET must be set in production');
+}
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({ secret: 'flash-secret', resave: false, saveUninitialized: false }));
+if (isProduction) app.set('trust proxy', 1);
+app.use(session({
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: isProduction, sameSite: 'lax' }
+}));
 
 // --- Simple JSON DB implementation ---
 const DB_FILE = path.join(__dirname, 'db.json');
