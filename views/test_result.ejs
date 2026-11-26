@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <title>Test Result</title>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="/dashboard">Flashcard</a>
+    <div class="nav"><button id="themeToggle">Theme</button></div>
+  </header>
+  <main class="wrap">
+    <% if (!results || results.length === 0) { %>
+      <h1>No results</h1>
+    <% } else { %>
+      <h1><%= deck.name %> Results</h1>
+      <div class="item">
+        <div class="score-badge">Score <%= latest.score %> / <%= latest.total %></div>
+        <div class="muted" style="margin-left:8px">on <%= new Date(latest.created_at).toLocaleString() %></div>
+      </div>
+
+      <div class="list" style="margin-top:12px">
+        <div class="item"><div class="q">Attended: <%= summary.attended %></div></div>
+        <div class="item"><div class="q">Unattended: <%= summary.unattended %></div></div>
+        <div class="item"><div class="q">Right: <%= summary.right %></div></div>
+        <div class="item"><div class="q">Wrong: <%= summary.wrong %></div></div>
+      </div>
+
+      <div style="overflow:auto;margin-top:12px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Your Answer</th>
+              <th>Correct Answer</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.forEach(r => { %>
+              <tr>
+                <td><%= r.question %></td>
+                <td><%= r.given %></td>
+                <td><%= r.expected %></td>
+                <td class="<%= r.status === 'Right' ? 'status-right' : 'status-wrong' %>"><%= r.status %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:16px">Previous Attempts</h3>
+      <div class="list">
+        <% results.slice(1).forEach(r => { %>
+          <div class="item">
+            <div class="score">Score <%= r.score %> / <%= r.total %></div>
+            <div class="muted" style="margin-left:8px">on <%= new Date(r.created_at).toLocaleString() %></div>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <a class="btn" href="/deck/<%= deck.id %>/test">Reattend test</a>
+        <a class="btn" href="/dashboard">Dashboard</a>
+      </div>
+    <% } %>
+  </main>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

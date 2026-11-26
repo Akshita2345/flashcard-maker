@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <title>Test</title>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="/dashboard">Flashcard</a>
+    <div class="nav"><button id="themeToggle">Theme</button></div>
+  </header>
+  <main class="wrap">
+    <h1><%= deck.name %> Test</h1>
+    <div id="test" class="test">
+      <div id="card" class="flip-card"><div class="flip-inner"><div id="testFront" class="flip-face flip-front"></div></div></div>
+      <input id="answer" placeholder="Type answer" />
+      <div class="row">
+        <button id="next" class="primary">Next</button>
+        <button id="end">End Test</button>
+      </div>
+      <div class="row">
+        <div id="timers" class="score"></div>
+        <div id="score" class="score"></div>
+      </div>
+    </div>
+    <div id="summaryOverlay" class="overlay"><div class="test-card" id="summaryContent"></div></div>
+  </main>
+  <script>
+    const data = <%- JSON.stringify(cards) %>
+    function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+    const cards = shuffle(data.slice())
+    let idx = 0
+    let score = 0
+    let attended = 0
+    let unanswered = 0
+    const answers = []
+    const cardEl = document.getElementById('card')
+    const frontEl = document.getElementById('testFront')
+    const answerEl = document.getElementById('answer')
+    const scoreEl = document.getElementById('score')
+    const timersEl = document.getElementById('timers')
+    let totalLeft = cards.length * 60
+    let questionLeft = 60
+    let timerId = null
+    function formatTime(s){const m=Math.floor(s/60);const ss=String(s%60).padStart(2,'0');return m+':'+ss}
+    function updateTimers(){timersEl.textContent = 'Question: '+formatTime(questionLeft)+' | Total: '+formatTime(totalLeft)}
+    function tick(){
+      if (totalLeft>0) totalLeft--
+      if (questionLeft>0) questionLeft--
+      updateTimers()
+      if (questionLeft===0){recordAnswer(true);}
+      if (totalLeft===0){endTest();}
+    }
+    function startTimers(){clearInterval(timerId);questionLeft = 60;updateTimers();timerId = setInterval(tick, 1000)}
+    function showCard(){const c = cards[idx];frontEl.textContent = 'Q: ' + c.question;cardEl.classList.remove('flipped');answerEl.value='';scoreEl.textContent = 'Score ' + score + ' / ' + cards.length;startTimers()}
+    function recordAnswer(fromTimeout){
+      const c = cards[idx]
+      const raw = (answerEl.value||'')
+      const val = raw.trim().toLowerCase()
+      const correct = (c.answer||'').trim().toLowerCase()
+      const isCorrect = (val.length>0 && val === correct)
+      if (val.length>0) attended++; else unanswered++
+      if (isCorrect) score++
+      answers.push({ cardId: c.id, answer: raw })
+      idx++
+      if (idx >= cards.length){endTest();return}
+      showCard()
+    }
+    document.getElementById('next').onclick = () => {recordAnswer(false)}
+    document.getElementById('end').onclick = () => {endTest()}
+    function endTest(){
+      clearInterval(timerId)
+      while (idx < cards.length){answers.push({ cardId: cards[idx].id, answer: '' }); unanswered++; idx++;}
+      const wrong = []
+      let right = 0
+      for (let i=0;i<cards.length;i++){
+        const c = cards[i]
+        const a = answers[i] || { answer: '' }
+        const given = String(a.answer||'').trim().toLowerCase()
+        const expected = String(c.answer||'').trim().toLowerCase()
+        const ok = (given.length>0 && given === expected)
+        if (ok) right++; else wrong.push({ question: c.question, expected: c.answer, given: a.answer||'' })
+      }
+      scoreEl.textContent = 'Score ' + right + ' / ' + cards.length
+      const html = [
+        '<h2>Test Summary</h2>',
+        '<div class="list">',
+        '<div class="item"><div class="score">Attended '+attended+'</div></div>',
+        '<div class="item"><div class="score">Unattended '+unanswered+'</div></div>',
+        '<div class="item"><div class="score">Right '+right+'</div></div>',
+        '</div>',
+        '<h3 style="margin-top:12px">Wrong Questions</h3>',
+        (wrong.length===0?'<div class="muted">None</div>':'<div class="list">'+wrong.map(w=>'<div class="item"><div class="q">Q: '+w.question+'</div><div class="a">Answer: '+w.expected+'</div><div class="a">Your: '+(w.given||'')+'</div></div>').join('')+'</div>'),
+        '<div class="row" style="margin-top:12px">',
+        '<a class="btn" href="/deck/<%= deck.id %>/test">Reattend test</a>',
+        '<a class="btn" href="/dashboard">Dashboard</a>',
+        '</div>'
+      ].join('')
+      document.getElementById('summaryContent').innerHTML = html
+      document.getElementById('summaryOverlay').style.display = 'flex'
+      fetch('/deck/<%= deck.id %>/test/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers })
+      }).catch(()=>{})
+    }
+    showCard()
+  </script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

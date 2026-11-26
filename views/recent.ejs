@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <title>Recently Added</title>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="/dashboard">Flashcard</a>
+    <div class="nav">
+      <a href="/dashboard">Dashboard</a>
+      <button id="themeToggle">Theme</button>
+    </div>
+  </header>
+  <main class="wrap">
+    <% if (!deck) { %>
+      <h1>No recent deck</h1>
+    <% } else { %>
+      <h1><%= deck.name %></h1>
+      <div class="grid">
+        <a class="card" href="/deck/<%= deck.id %>/study">Study all</a>
+        <a class="card" href="/deck/<%= deck.id %>/test">Attend test</a>
+      </div>
+      <div class="list">
+        <% cards.forEach(c => { %>
+          <div class="flip-card" tabindex="0">
+            <div class="flip-inner">
+              <div class="flip-face flip-front">Q: <%= c.question %></div>
+              <div class="flip-face flip-back">A: <%= c.answer %></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+  <% if (deck) { %>
+  <div id="overlay" class="overlay">
+    <div style="background:var(--surface);padding:20px;border-radius:12px;max-width:600px;width:90%">
+      <div id="studyCard" class="flip-card"><div class="flip-inner"><div id="studyFront" class="flip-face flip-front"></div><div id="studyBack" class="flip-face flip-back"></div></div></div>
+      <div class="row" style="margin-top:12px">
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+        <button id="toggle">Flip</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="finish">Finish studying</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const cardsData = <%- JSON.stringify(cards) %>
+    function startStudy(){const overlay=document.getElementById('overlay');overlay.style.display='flex';let i=0;const cardEl=document.getElementById('studyCard');const front=document.getElementById('studyFront');const back=document.getElementById('studyBack');function render(){const c=cardsData[i];front.textContent='Q: '+c.question;back.textContent='A: '+c.answer;cardEl.classList.remove('flipped')}render();document.getElementById('prev').onclick=()=>{if(i>0){i--;render()}};document.getElementById('next').onclick=()=>{if(i<cardsData.length-1){i++;render()}};document.getElementById('toggle').onclick=()=>{cardEl.classList.toggle('flipped')};document.getElementById('finish').onclick=()=>{overlay.style.display='none';const ok=confirm('Attend test now?');if(ok){window.location.href='/deck/<%= deck.id %>/test'}else{window.location.href='/dashboard'}}}
+    if (window.location.pathname.endsWith('/study')) startStudy()
+    document.querySelectorAll('.flip-card').forEach(el=>{el.addEventListener('click',()=>el.classList.toggle('flipped'))})
+  </script>
+  <% } %>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

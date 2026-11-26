@@ -1,0 +1,7 @@
+node_modules/
+db.json
+db.json.tmp
+data.db
+.env
+.env.*
+npm-debug.log*

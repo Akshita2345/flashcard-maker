@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <title>Previous Cards</title>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="/dashboard">Flashcard</a>
+    <div class="nav">
+      <a href="/dashboard">Dashboard</a>
+      <button id="themeToggle">Theme</button>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>Not attended test</h1>
+    <div class="list">
+      <% notAttended.forEach(d => { %>
+        <div class="item">
+          <div><%= d.name %></div>
+          <div class="row">
+            <a class="btn" href="/deck/<%= d.id %>/study">Read deck</a>
+            <a class="btn" href="/deck/<%= d.id %>/test">Attend test</a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <h1>Attended test</h1>
+    <div class="list">
+      <% attended.forEach(d => { %>
+        <div class="item">
+          <div><%= d.name %></div>
+          <div class="row">
+            <a class="btn" href="/deck/<%= d.id %>">Show deck</a>
+            <a class="btn" href="/deck/<%= d.id %>/test/result">Show test result</a>
+            <a class="btn" href="/deck/<%= d.id %>/test">Reattend test</a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </main>
+  <script src="/js/theme.js"></script>
+</body>
+</html>
